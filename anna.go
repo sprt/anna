@@ -1,4 +1,4 @@
-package main
+package anna
 
 import (
 	"strings"
@@ -14,17 +14,17 @@ type command struct {
 type Bot struct {
 	email, password, token string
 	cmdPrefix              string
-	session                *discordgo.Session
+	Session                *discordgo.Session
 	user, owner            *discordgo.User
 	commands               []*command
 }
 
-func NewBot(email, password, token, cmdPrefix string) *Bot {
+func NewBot() *Bot {
 	return &Bot{
-		email:     email,
-		password:  password,
-		token:     token,
-		cmdPrefix: cmdPrefix,
+		email:     Config.Email,
+		password:  Config.Password,
+		token:     Config.Token,
+		cmdPrefix: Config.CommandPrefix,
 	}
 }
 
@@ -44,11 +44,11 @@ func (b *Bot) Start() error {
 		return err
 	}
 
-	b.session = session
+	b.Session = session
 	b.user = user
 	// TODO: initialize owner
 
-	b.session.AddHandler(b.onMessageCreate)
+	b.Session.AddHandler(b.onMessageCreate)
 
 	return nil
 }

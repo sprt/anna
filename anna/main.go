@@ -6,13 +6,16 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+
+	"github.com/sprt/anna"
+	"github.com/sprt/anna/commands"
 )
 
-var bot *Bot
+var bot *anna.Bot
 
 func init() {
-	bot = NewBot(config.Email, config.Password, config.Token, config.CommandPrefix)
-	bot.RegisterCommand("eightball", cmdEightball)
+	bot = anna.NewBot()
+	bot.RegisterCommand("eightball", commands.Eightball)
 }
 
 func main() {
