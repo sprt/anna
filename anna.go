@@ -21,9 +21,9 @@ type Bot struct {
 
 func NewBot() *Bot {
 	return &Bot{
-		email:     Config.Email,
-		password:  Config.Password,
-		token:     Config.Token,
+		email:     Config.DiscordEmail,
+		password:  Config.DiscordPassword,
+		token:     Config.DiscordToken,
 		cmdPrefix: Config.CommandPrefix,
 	}
 }
@@ -74,7 +74,7 @@ func (b *Bot) onMessageCreate(s *discordgo.Session, mc *discordgo.MessageCreate)
 
 func (b *Bot) onCommand(message *discordgo.Message, name string, args []string) {
 	for _, cmd := range b.commands {
-		if cmd.name == strings.ToLower(name) {
+		if strings.EqualFold(cmd.name, name) {
 			cmd.fn(b, message, args)
 			break
 		}
