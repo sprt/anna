@@ -3,6 +3,7 @@ package anna
 import (
 	"strings"
 
+	"github.com/boltdb/bolt"
 	"github.com/bwmarrin/discordgo"
 )
 
@@ -14,17 +15,19 @@ type command struct {
 type Bot struct {
 	email, password, token string
 	cmdPrefix              string
+	db                     *bolt.DB
 	Session                *discordgo.Session
 	user, owner            *discordgo.User
 	commands               []*command
 }
 
-func NewBot() *Bot {
+func NewBot(db *bolt.DB) *Bot {
 	return &Bot{
 		email:     Config.DiscordEmail,
 		password:  Config.DiscordPassword,
 		token:     Config.DiscordToken,
 		cmdPrefix: Config.CommandPrefix,
+		db:        db,
 	}
 }
 
