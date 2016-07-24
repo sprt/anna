@@ -23,6 +23,13 @@ func init() {
 	flag.StringVar(&dbPath, "db", "", "path to the database")
 }
 
+func registerCommands(bot *anna.Bot) {
+	bot.RegisterCommand("eightball", commands.Eightball)
+}
+
+func registerTasks(bot *anna.Bot) {
+}
+
 func main() {
 	flag.Parse()
 
@@ -37,7 +44,8 @@ func main() {
 	}
 
 	bot := anna.NewBot(db)
-	bot.RegisterCommand("eightball", commands.Eightball)
+	registerCommands(bot)
+	registerTasks(bot)
 
 	err = bot.Start()
 	if err != nil {
