@@ -26,6 +26,9 @@ type Client struct {
 }
 
 func NewClient(client *http.Client, rl *rate.Limiter) *Client {
+	if client == nil {
+		client = http.DefaultClient
+	}
 	if client.Timeout == 0 {
 		client.Timeout = defaultTimeout
 	}
