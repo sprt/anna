@@ -26,6 +26,7 @@ func init() {
 
 func registerCommands(bot *anna.Bot) {
 	bot.RegisterCommand("eightball", commands.Eightball)
+	bot.RegisterCommand("userinfo", commands.UserInfo)
 }
 
 func registerTasks(bot *anna.Bot) {

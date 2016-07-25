@@ -2,6 +2,7 @@ package roster
 
 import (
 	"encoding/csv"
+	"fmt"
 	"net/http"
 	"sort"
 	"strings"
@@ -18,7 +19,26 @@ type Entry struct {
 	SCUsername     string
 	RedditUsername string
 	Nickname       string
-	TimezoneOffset int // in seconds
+	TZOffset       int // in seconds
+}
+
+func (e *Entry) Timezone() string {
+	h, m := e.TZOffset/3600, e.TZOffset/60%60
+	if m < 0 {
+		m = -m
+	}
+	switch {
+	case m != 0:
+		return fmt.Sprintf("UTC%+d:%d", h, m)
+	case h != 0:
+		return fmt.Sprintf("UTC%+d", h)
+	default:
+		return "UTC"
+	}
+}
+
+func (e *Entry) LocalTimeAt(t time.Time) time.Time {
+	return t.Add(time.Duration(e.TZOffset) * time.Second)
 }
 
 func (e *Entry) unmarshalCSV(fields []string) error {
@@ -40,7 +60,7 @@ func (e *Entry) unmarshalCSV(fields []string) error {
 	if err != nil {
 		return err
 	}
-	e.TimezoneOffset = tz
+	e.TZOffset = tz
 
 	return nil
 }

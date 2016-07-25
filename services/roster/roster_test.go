@@ -16,6 +16,28 @@ var (
 	key = "foo"
 )
 
+func TestEntryTimezone(t *testing.T) {
+	var tests = []struct {
+		in  int
+		out string
+	}{
+		{-1.5 * 3600, "UTC-1:30"},
+		{-3600, "UTC-1"},
+		{0, "UTC"},
+		{3600, "UTC+1"},
+		{2 * 3600, "UTC+2"},
+		{2.5 * 3600, "UTC+2:30"},
+	}
+
+	for _, tt := range tests {
+		e := &Entry{TZOffset: tt.in}
+		tz := e.Timezone()
+		if tz != tt.out {
+			t.Errorf("%d: got %s, want %s", tt.in, tz, tt.out)
+		}
+	}
+}
+
 func TestEntries(t *testing.T) {
 	env.Setup()
 	defer env.Teardown()

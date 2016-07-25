@@ -12,12 +12,6 @@ import (
 	"github.com/sprt/anna/services/socialclub"
 )
 
-type Member struct {
-	// either fields can be nil (exclusively)
-	RosterEntry *roster.Entry
-	SCMember    *socialclub.Member
-}
-
 type Bot struct {
 	email, password, token string
 	cmdPrefix              string
@@ -100,10 +94,13 @@ func (b *Bot) onReady(s *discordgo.Session, r *discordgo.Ready) {
 		go func() {
 			for {
 				time.Sleep(task.sleep)
+				log.Print("Starting task...")
 				err := task.fn(b)
 				if err != nil {
 					log.Printf("ERROR: task: %s", err)
+					continue
 				}
+				log.Printf("Task done, next run in %s", task.sleep)
 			}
 		}()
 	}

@@ -35,7 +35,7 @@ func FetchMembers(b *anna.Bot) error {
 		return err
 	}
 
-	log.Print("Fetched %d members", len(members))
+	log.Printf("Fetched %d members", len(members))
 
 	return nil
 }
