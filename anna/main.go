@@ -7,16 +7,17 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	"github.com/boltdb/bolt"
+
 	"github.com/sprt/anna"
 	"github.com/sprt/anna/commands"
+	"github.com/sprt/anna/tasks"
 )
 
 var (
 	dbPath string
-
-	bot *anna.Bot
 )
 
 func init() {
@@ -28,6 +29,7 @@ func registerCommands(bot *anna.Bot) {
 }
 
 func registerTasks(bot *anna.Bot) {
+	bot.RegisterTask(tasks.FetchMembers, time.Hour)
 }
 
 func main() {

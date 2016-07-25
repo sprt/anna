@@ -5,6 +5,7 @@ import (
 	"math/rand"
 
 	"github.com/bwmarrin/discordgo"
+
 	"github.com/sprt/anna"
 )
 

@@ -6,16 +6,28 @@ import (
 
 	"github.com/boltdb/bolt"
 	"github.com/bwmarrin/discordgo"
+
+	"github.com/sprt/anna/services/roster"
+	"github.com/sprt/anna/services/socialclub"
 )
+
+type Member struct {
+	// either fields can be nil (exclusively)
+	RosterEntry *roster.Entry
+	SCMember    *socialclub.Member
+}
 
 type Bot struct {
 	email, password, token string
 	cmdPrefix              string
-	db                     *bolt.DB
+	DB                     *bolt.DB
 	Session                *discordgo.Session
 	user, owner            *discordgo.User
 	commands               []*command
 	tasks                  []*task
+
+	Roster     *roster.Client
+	SocialClub *socialclub.Client
 }
 
 func NewBot(db *bolt.DB) *Bot {
@@ -24,11 +36,24 @@ func NewBot(db *bolt.DB) *Bot {
 		password:  Config.DiscordPassword,
 		token:     Config.DiscordToken,
 		cmdPrefix: Config.CommandPrefix,
-		db:        db,
+		DB:        db,
+
+		Roster:     roster.NewClient(Config.GoogleDriveRosterID, nil, nil),
+		SocialClub: socialclub.NewClient(&socialclub.Config{CrewID: Config.SocialClubCrewID}, nil, nil),
 	}
 }
 
 func (b *Bot) Start() error {
+	if err := b.DB.Update(func(tx *bolt.Tx) error {
+		_, err := tx.CreateBucketIfNotExists([]byte("default"))
+		if err != nil {
+			return err
+		}
+		return nil
+	}); err != nil {
+		return err
+	}
+
 	session, err := discordgo.New(b.email, b.password, b.token)
 	if err != nil {
 		return err
