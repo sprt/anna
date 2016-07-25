@@ -32,11 +32,11 @@ Date/Time,PSN ID,Social Club ID,reddit,Scheduled Invite Status,Nickname,Micropho
 	})
 
 	want := []*Entry{
-		{time.Date(2016, 2, 14, 23, 43, 0, 0, time.UTC), "naraic42", "dogeshibe", "naraic42", "Ciaran", 0},
-		{time.Date(2016, 6, 4, 13, 14, 9, 0, time.UTC), "Gnayt", "iJohnson", "quatroquesodosfritos", "Nate", -8 * 3600},
-		{time.Date(2016, 5, 20, 14, 6, 32, 0, time.UTC), "IanKC", "IanKSee", "iangator", "Piccy", -5 * 3600},
 		{time.Date(2014, 12, 16, 0, 0, 0, 0, time.UTC), "CSP2006", "ChrisP2006", "ChrisP2006", "Chris", -5 * 3600},
+		{time.Date(2016, 2, 14, 23, 43, 0, 0, time.UTC), "naraic42", "dogeshibe", "naraic42", "Ciaran", 0},
 		{time.Date(2016, 2, 19, 17, 5, 0, 0, time.UTC), "hodder99", "hoddernut", "hodder99", "hodder", -3.5 * 3600},
+		{time.Date(2016, 5, 20, 14, 6, 32, 0, time.UTC), "IanKC", "IanKSee", "iangator", "Piccy", -5 * 3600},
+		{time.Date(2016, 6, 4, 13, 14, 9, 0, time.UTC), "Gnayt", "iJohnson", "quatroquesodosfritos", "Nate", -8 * 3600},
 	}
 
 	s := NewClient(key, env.Client, testutil.InfRateLimiter)

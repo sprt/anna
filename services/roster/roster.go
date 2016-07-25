@@ -3,6 +3,7 @@ package roster
 import (
 	"encoding/csv"
 	"net/http"
+	"sort"
 	"strings"
 	"time"
 
@@ -88,8 +89,15 @@ func (c *Client) Entries() ([]*Entry, error) {
 		entries = append(entries, entry)
 	}
 
+	sort.Sort(byTimestamp(entries))
 	return entries, nil
 }
+
+type byTimestamp []*Entry
+
+func (r byTimestamp) Len() int           { return len(r) }
+func (r byTimestamp) Swap(i, j int)      { r[i], r[j] = r[j], r[i] }
+func (r byTimestamp) Less(i, j int) bool { return r[i].Timestamp.Before(r[j].Timestamp) }
 
 func parseTimezone(s string) (sec int, err error) {
 	parts := strings.Fields(s)
