@@ -1,6 +1,7 @@
 package anna
 
 import (
+	"log"
 	"strings"
 	"time"
 
@@ -79,7 +80,7 @@ func (b *Bot) Start() error {
 	return nil
 }
 
-func (b *Bot) RegisterCommand(name string, fn func(*Bot, *discordgo.Message, []string)) {
+func (b *Bot) RegisterCommand(name string, fn func(*Bot, *discordgo.Message, []string) error) {
 	// FIXME: panic if a task with the same name already exists
 	b.commands = append(b.commands, &command{
 		name: name,
@@ -87,7 +88,7 @@ func (b *Bot) RegisterCommand(name string, fn func(*Bot, *discordgo.Message, []s
 	})
 }
 
-func (b *Bot) RegisterTask(fn func(*Bot), sleep time.Duration) {
+func (b *Bot) RegisterTask(fn func(*Bot) error, sleep time.Duration) {
 	b.tasks = append(b.tasks, &task{
 		fn:    fn,
 		sleep: sleep,
@@ -99,7 +100,10 @@ func (b *Bot) onReady(s *discordgo.Session, r *discordgo.Ready) {
 		go func() {
 			for {
 				time.Sleep(task.sleep)
-				task.fn(b)
+				err := task.fn(b)
+				if err != nil {
+					log.Printf("ERROR: task: %s", err)
+				}
 			}
 		}()
 	}
@@ -121,7 +125,10 @@ func (b *Bot) onMessageCreate(s *discordgo.Session, mc *discordgo.MessageCreate)
 func (b *Bot) onCommand(message *discordgo.Message, name string, args []string) {
 	for _, cmd := range b.commands {
 		if strings.EqualFold(cmd.name, name) {
-			cmd.fn(b, message, args)
+			err := cmd.fn(b, message, args)
+			if err != nil {
+				log.Printf("ERROR: %s: %s", cmd.name, err)
+			}
 			break
 		}
 	}
@@ -129,10 +136,10 @@ func (b *Bot) onCommand(message *discordgo.Message, name string, args []string) 
 
 type command struct {
 	name string
-	fn   func(*Bot, *discordgo.Message, []string)
+	fn   func(*Bot, *discordgo.Message, []string) error
 }
 
 type task struct {
-	fn    func(*Bot)
+	fn    func(*Bot) error
 	sleep time.Duration
 }

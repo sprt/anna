@@ -1,7 +1,6 @@
 package commands
 
 import (
-	"log"
 	"math/rand"
 
 	"github.com/bwmarrin/discordgo"
@@ -32,9 +31,8 @@ var eightballAnswers = []string{
 	"Very doubtful",
 }
 
-func Eightball(bot *anna.Bot, msg *discordgo.Message, args []string) {
+func Eightball(bot *anna.Bot, msg *discordgo.Message, args []string) error {
 	answer := eightballAnswers[rand.Intn(len(eightballAnswers))]
-	if _, err := bot.Session.ChannelMessageSend(msg.ChannelID, answer); err != nil {
-		log.Printf("eightball: %s", err)
-	}
+	_, err := bot.Session.ChannelMessageSend(msg.ChannelID, answer)
+	return err
 }

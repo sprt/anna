@@ -12,16 +12,14 @@ import (
 	"github.com/sprt/anna/services/socialclub"
 )
 
-func FetchMembers(b *anna.Bot) {
+func FetchMembers(b *anna.Bot) error {
 	roster, err := b.Roster.Entries()
 	if err != nil {
-		log.Print(err)
-		return
+		return err
 	}
 	sc, err := b.SocialClub.Members()
 	if err != nil {
-		log.Print(err)
-		return
+		return err
 	}
 	members := mergeRosterAndSC(roster, sc)
 
@@ -34,11 +32,12 @@ func FetchMembers(b *anna.Bot) {
 		bu := tx.Bucket([]byte("default"))
 		return bu.Put([]byte("members"), bMembers.Bytes())
 	}); err != nil {
-		log.Print(err)
-		return
+		return err
 	}
 
 	log.Print("Fetched %d members", len(members))
+
+	return nil
 }
 
 func mergeRosterAndSC(r []*roster.Entry, sc []*socialclub.Member) []*anna.Member {
