@@ -44,6 +44,7 @@ func (s *Client) Do(req *http.Request) (*http.Response, error) {
 		return nil, err
 	}
 
+	log.Printf("%s %s", req.Method, req.URL)
 	reqDump := reqDump(req)
 
 	resp, err := s.client.Do(req)
