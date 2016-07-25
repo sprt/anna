@@ -48,7 +48,7 @@ func TestTokenSource(t *testing.T) {
 		Expiry:       time.Date(2016, 7, 21, 17, 51, 33, 0, time.UTC),
 	}
 
-	s := newTokenSource(env.Client)
+	s := newTokenSource(&Config{}, env.Client)
 	got, err := s.Token()
 	if err != nil {
 		t.Fatal(err)

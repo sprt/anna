@@ -9,7 +9,6 @@ import (
 
 	"golang.org/x/time/rate"
 
-	"github.com/sprt/anna"
 	"github.com/sprt/anna/services"
 )
 
@@ -19,13 +18,19 @@ type Member struct {
 	JoinDate socialClubTime `json:"DateJoined"`
 }
 
-type Client struct {
-	*services.Client
+type Config struct {
+	CrewID int
 }
 
-func NewClient(client *http.Client, rl *rate.Limiter) *Client {
+type Client struct {
+	*services.Client
+	config *Config
+}
+
+func NewClient(config *Config, client *http.Client, rl *rate.Limiter) *Client {
 	return &Client{
 		Client: services.NewClient(client, rl),
+		config: config,
 	}
 }
 
@@ -58,7 +63,7 @@ func (c *Client) memberList(page int) ([]*Member, error) {
 	}
 
 	q := req.URL.Query()
-	q.Add("crewId", strconv.Itoa(anna.Config.SocialClubCrewID))
+	q.Add("crewId", strconv.Itoa(c.config.CrewID))
 	q.Add("pageNumber", strconv.Itoa(page))
 	req.URL.RawQuery = q.Encode()
 

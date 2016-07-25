@@ -7,7 +7,6 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/sprt/anna"
 	"github.com/sprt/anna/services/internal/testutil"
 )
 
@@ -22,7 +21,10 @@ const (
 	userOK                          = "ok"
 )
 
-var env = new(testutil.Env)
+var (
+	env    = new(testutil.Env)
+	config = &Config{Username: "john"}
+)
 
 func TestOnlineFriends(t *testing.T) {
 	env.Setup()
@@ -64,7 +66,7 @@ func TestOnlineFriends(t *testing.T) {
 		},
 	}
 
-	c := NewClient(env.Client, testutil.InfRateLimiter)
+	c := NewClient(config, env.Client, testutil.InfRateLimiter)
 	got, err := c.OnlineFriends()
 	if err != nil {
 		t.Fatal(err)
@@ -84,7 +86,7 @@ func TestFriends(t *testing.T) {
 	env.Setup()
 	defer env.Teardown()
 
-	env.Mux.HandleFunc(fmt.Sprintf("/userProfile/v1/users/%s/friendList", anna.Config.PSNUsername), func(w http.ResponseWriter, r *http.Request) {
+	env.Mux.HandleFunc(fmt.Sprintf("/userProfile/v1/users/%s/friendList", config.Username), func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Query().Get("friendStatus") == string(friends) {
 			fmt.Fprint(w, `{"friendList": [
 				{"onlineId": "foo"},
@@ -100,7 +102,7 @@ func TestFriends(t *testing.T) {
 		{Username: "baz"},
 	}
 
-	c := NewClient(env.Client, testutil.InfRateLimiter)
+	c := NewClient(config, env.Client, testutil.InfRateLimiter)
 	got, err := c.Friends()
 	if err != nil {
 		t.Fatal(err)
@@ -122,7 +124,7 @@ func TestSendFriendRequest(t *testing.T) {
 
 	reqMsg := "sup"
 
-	pattern := fmt.Sprintf("/userProfile/v1/users/%s/friendList/", anna.Config.PSNUsername)
+	pattern := fmt.Sprintf("/userProfile/v1/users/%s/friendList/", config.Username)
 	env.Mux.HandleFunc(pattern, func(w http.ResponseWriter, r *http.Request) {
 		data := make(map[string]interface{})
 		err := json.NewDecoder(r.Body).Decode(&data)
@@ -158,7 +160,7 @@ func TestSendFriendRequest(t *testing.T) {
 		{userNotFound, ErrUserNotFound},
 	}
 
-	c := NewClient(env.Client, testutil.InfRateLimiter)
+	c := NewClient(config, env.Client, testutil.InfRateLimiter)
 	for _, tt := range tests {
 		if err := c.SendFriendRequest(string(tt.username), reqMsg); err != tt.err {
 			t.Errorf("AcceptFriendRequest(%q) = %q, want %q", tt.username, err, tt.err)
@@ -170,7 +172,7 @@ func TestAcceptFriendRequest(t *testing.T) {
 	env.Setup()
 	defer env.Teardown()
 
-	pattern := fmt.Sprintf("/userProfile/v1/users/%s/friendList/", anna.Config.PSNUsername)
+	pattern := fmt.Sprintf("/userProfile/v1/users/%s/friendList/", config.Username)
 	env.Mux.HandleFunc(pattern, func(w http.ResponseWriter, r *http.Request) {
 		username := user(r.URL.Path[len(pattern):])
 		switch username {
@@ -194,7 +196,7 @@ func TestAcceptFriendRequest(t *testing.T) {
 		{userNotFound, ErrUserNotFound},
 	}
 
-	c := NewClient(env.Client, testutil.InfRateLimiter)
+	c := NewClient(config, env.Client, testutil.InfRateLimiter)
 	for _, tt := range tests {
 		if err := c.AcceptFriendRequest(string(tt.username)); err != tt.err {
 			t.Errorf("AcceptFriendRequest(%q) = %q, want %q", tt.username, err, tt.err)
@@ -206,7 +208,7 @@ func TestIgnoreFriendRequest(t *testing.T) {
 	env.Setup()
 	defer env.Teardown()
 
-	pattern := fmt.Sprintf("/userProfile/v1/users/%s/friendList/", anna.Config.PSNUsername)
+	pattern := fmt.Sprintf("/userProfile/v1/users/%s/friendList/", config.Username)
 	env.Mux.HandleFunc(pattern, func(w http.ResponseWriter, r *http.Request) {
 		username := user(r.URL.Path[len(pattern):])
 		switch username {
@@ -230,7 +232,7 @@ func TestIgnoreFriendRequest(t *testing.T) {
 		{userNotFound, ErrUserNotFound},
 	}
 
-	c := NewClient(env.Client, testutil.InfRateLimiter)
+	c := NewClient(config, env.Client, testutil.InfRateLimiter)
 	for _, tt := range tests {
 		if err := c.IgnoreFriendRequest(string(tt.username)); err != tt.err {
 			t.Errorf("IgnoreFriendRequest(%q) = %q, want %q", tt.username, err, tt.err)

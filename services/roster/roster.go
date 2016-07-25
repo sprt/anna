@@ -8,7 +8,6 @@ import (
 
 	"golang.org/x/time/rate"
 
-	"github.com/sprt/anna"
 	"github.com/sprt/anna/services"
 )
 
@@ -47,11 +46,13 @@ func (e *Entry) unmarshalCSV(fields []string) error {
 
 type Client struct {
 	*services.Client
+	key string
 }
 
-func NewClient(client *http.Client, rl *rate.Limiter) *Client {
+func NewClient(key string, client *http.Client, rl *rate.Limiter) *Client {
 	return &Client{
 		Client: services.NewClient(client, rl),
+		key:    key,
 	}
 }
 
@@ -62,7 +63,7 @@ func (c *Client) Entries() ([]*Entry, error) {
 	}
 
 	q := req.URL.Query()
-	q.Add("key", anna.Config.GoogleDriveRosterID)
+	q.Add("key", c.key)
 	q.Add("output", "csv")
 	req.URL.RawQuery = q.Encode()
 

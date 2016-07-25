@@ -11,7 +11,10 @@ import (
 	"github.com/sprt/anna/services/internal/testutil"
 )
 
-var env = new(testutil.Env)
+var (
+	env = new(testutil.Env)
+	key = "foo"
+)
 
 func TestEntries(t *testing.T) {
 	env.Setup()
@@ -36,7 +39,7 @@ Date/Time,PSN ID,Social Club ID,reddit,Scheduled Invite Status,Nickname,Micropho
 		{time.Date(2016, 2, 19, 17, 5, 0, 0, time.UTC), "hodder99", "hoddernut", "hodder99", "hodder", -3.5 * 3600},
 	}
 
-	s := NewClient(env.Client, testutil.InfRateLimiter)
+	s := NewClient(key, env.Client, testutil.InfRateLimiter)
 	got, err := s.Entries()
 	if err != nil {
 		t.Error(err)

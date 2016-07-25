@@ -19,12 +19,11 @@ import (
 
 type tokenSource struct {
 	*services.Client
-
 	client *http.Client // pointer to Service.client
 	mu     sync.Mutex   // guards Token
 }
 
-func newTokenSource(client *http.Client) *tokenSource {
+func newTokenSource(config *Config, client *http.Client) *tokenSource {
 	ts := &tokenSource{
 		Client: services.NewClient(client, rate.NewLimiter(rate.Inf, 1)),
 		client: client,

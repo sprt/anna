@@ -11,7 +11,10 @@ import (
 	"github.com/sprt/anna/services/internal/testutil"
 )
 
-var env = new(testutil.Env)
+var (
+	env    = new(testutil.Env)
+	config = &Config{CrewID: 1}
+)
 
 func TestMembers(t *testing.T) {
 	env.Setup()
@@ -82,7 +85,7 @@ func TestMembers(t *testing.T) {
 		{26556154, "GENGgar", socialClubTime{time.Date(2014, 9, 18, 0, 0, 0, 0, time.UTC)}},
 	}
 
-	s := NewClient(env.Client, testutil.InfRateLimiter)
+	s := NewClient(config, env.Client, testutil.InfRateLimiter)
 	got, err := s.Members()
 	if err != nil {
 		t.Error(err)

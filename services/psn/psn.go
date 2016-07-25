@@ -16,7 +16,6 @@ import (
 
 	"golang.org/x/time/rate"
 
-	"github.com/sprt/anna"
 	"github.com/sprt/anna/services"
 )
 
@@ -53,13 +52,21 @@ type Presence struct {
 	IsBroadcasting bool   `json:"hasBroadcastData"`
 }
 
-type Client struct {
-	*services.Client
+type Config struct {
+	Username, Email, Password string
+	ClientID, ClientSecret    string
+	DUID                      string
 }
 
-func NewClient(client *http.Client, rl *rate.Limiter) *Client {
+type Client struct {
+	*services.Client
+	config *Config
+}
+
+func NewClient(config *Config, client *http.Client, rl *rate.Limiter) *Client {
 	return &Client{
 		Client: services.NewClient(client, rl),
+		config: config,
 	}
 }
 
@@ -133,7 +140,7 @@ func (c *Client) IgnoreFriendRequest(username string) error {
 }
 
 func (c *Client) doFriendListRequest(method, username string, body io.Reader) error {
-	url := baseUserURL + fmt.Sprintf("/userProfile/v1/users/%s/friendList/%s", anna.Config.PSNUsername, username)
+	url := baseUserURL + fmt.Sprintf("/userProfile/v1/users/%s/friendList/%s", c.config.Username, username)
 	req, err := http.NewRequest(method, url, body)
 	if err != nil {
 		return err
@@ -149,7 +156,7 @@ func (c *Client) doFriendListRequest(method, username string, body io.Reader) er
 }
 
 func (c *Client) friends(status friendStatus) ([]*User, error) {
-	url := baseURL + fmt.Sprintf("/userProfile/v1/users/%s/friendList", anna.Config.PSNUsername)
+	url := baseURL + fmt.Sprintf("/userProfile/v1/users/%s/friendList", c.config.Username)
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		return nil, err

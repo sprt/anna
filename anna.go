@@ -73,8 +73,8 @@ func (b *Bot) onReady(s *discordgo.Session, r *discordgo.Ready) {
 	for _, task := range b.tasks {
 		go func() {
 			for {
-				task.fn(b)
 				time.Sleep(task.sleep)
+				task.fn(b)
 			}
 		}()
 	}
@@ -85,6 +85,7 @@ func (b *Bot) onMessageCreate(s *discordgo.Session, mc *discordgo.MessageCreate)
 		return
 	}
 
+	// XXX: don't allow spaces between prefix and command name
 	if strings.HasPrefix(mc.Content, b.cmdPrefix) {
 		args := strings.Fields(mc.Content[len(b.cmdPrefix):])
 		b.onCommand(mc.Message, args[0], args[1:])
