@@ -97,7 +97,7 @@ type socialClubTime struct {
 }
 
 func (t *socialClubTime) UnmarshalJSON(b []byte) error {
-	parsed, err := time.Parse(`"1/02/2006"`, string(b[:]))
+	parsed, err := time.Parse(`"1/2/2006"`, string(b[:]))
 	if err != nil {
 		return err
 	}

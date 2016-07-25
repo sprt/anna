@@ -68,7 +68,7 @@ func TestMembers(t *testing.T) {
 					"AllowAdd": false,
 					"AllowBan": false,
 					"AllowKick": false,
-					"DateJoined": "9/18/2014"
+					"DateJoined": "11/4/2014"
 				}
 				]}`)
 			}
@@ -82,7 +82,7 @@ func TestMembers(t *testing.T) {
 	want := []*Member{
 		{29190387, "VitoCorleone85", socialClubTime{time.Date(2014, 6, 10, 0, 0, 0, 0, time.UTC)}},
 		{29913246, "BR-700", socialClubTime{time.Date(2014, 6, 10, 0, 0, 0, 0, time.UTC)}},
-		{26556154, "GENGgar", socialClubTime{time.Date(2014, 9, 18, 0, 0, 0, 0, time.UTC)}},
+		{26556154, "GENGgar", socialClubTime{time.Date(2014, 11, 4, 0, 0, 0, 0, time.UTC)}},
 	}
 
 	s := NewClient(config, env.Client, testutil.InfRateLimiter)
