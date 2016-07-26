@@ -13,20 +13,21 @@ import (
 	"golang.org/x/oauth2"
 	"golang.org/x/time/rate"
 
-	"github.com/sprt/anna"
 	"github.com/sprt/anna/services"
 )
 
 type tokenSource struct {
 	*services.Client
 	client *http.Client // pointer to Service.client
-	mu     sync.Mutex   // guards Token
+	config *Config
+	mu     sync.Mutex // guards Token
 }
 
 func newTokenSource(config *Config, client *http.Client) *tokenSource {
 	ts := &tokenSource{
 		Client: services.NewClient(client, rate.NewLimiter(rate.Inf, 1)),
 		client: client,
+		config: config,
 	}
 	return ts
 }
@@ -68,7 +69,7 @@ func (ts *tokenSource) checkToken(tok *token) error {
 	if err != nil {
 		return err
 	}
-	auth := []byte(anna.Config.PSNClientID + ":" + anna.Config.PSNClientSecret)
+	auth := []byte(ts.config.ClientID + ":" + ts.config.ClientSecret)
 	req.Header.Add("Authorization", "Basic "+base64.StdEncoding.EncodeToString(auth))
 
 	_, err = ts.Do(req)
@@ -77,9 +78,9 @@ func (ts *tokenSource) checkToken(tok *token) error {
 
 func (ts *tokenSource) token(grantCode string) (*token, time.Time, error) {
 	data := url.Values{}
-	data.Set("client_id", anna.Config.PSNClientID)
-	data.Set("client_secret", anna.Config.PSNClientSecret)
-	data.Set("duid", anna.Config.PSNDuid)
+	data.Set("client_id", ts.config.ClientID)
+	data.Set("client_secret", ts.config.ClientSecret)
+	data.Set("duid", ts.config.DUID)
 	data.Set("redirect_uri", redirectURI)
 	data.Set("scope", scope)
 	data.Set("service_entity", serviceEntity)
@@ -119,9 +120,9 @@ func (ts *tokenSource) grantCode() (string, error) {
 	}
 
 	q := req.URL.Query()
-	q.Add("client_id", anna.Config.PSNClientID)
-	q.Add("client_secret", anna.Config.PSNClientSecret)
-	q.Add("duid", anna.Config.PSNDuid)
+	q.Add("client_id", ts.config.ClientID)
+	q.Add("client_secret", ts.config.ClientSecret)
+	q.Add("duid", ts.config.DUID)
 	q.Add("redirect_uri", redirectURI)
 	q.Add("scope", scope)
 	q.Add("service_entity", serviceEntity)
@@ -152,9 +153,9 @@ func (ts *tokenSource) grantCode() (string, error) {
 func (ts *tokenSource) pullSSOCookie() error {
 	data := url.Values{}
 	data.Set("authentication_type", "password")
-	data.Set("username", anna.Config.PSNEmail)
-	data.Set("password", anna.Config.PSNPassword)
-	data.Set("client_id", anna.Config.PSNClientID)
+	data.Set("username", ts.config.Email)
+	data.Set("password", ts.config.Password)
+	data.Set("client_id", ts.config.ClientID)
 	body := strings.NewReader(data.Encode())
 
 	req, err := http.NewRequest("POST", baseURL+"/2.0/ssocookie", body)

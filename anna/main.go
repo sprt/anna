@@ -6,10 +6,14 @@ import (
 	"log"
 	"os"
 	"os/signal"
+	"path"
+	"path/filepath"
+	"strings"
 	"syscall"
 	"time"
 
 	"github.com/boltdb/bolt"
+	"github.com/spf13/viper"
 
 	"github.com/sprt/anna"
 	"github.com/sprt/anna/commands"
@@ -17,11 +21,13 @@ import (
 )
 
 var (
-	dbPath string
+	dbPath     string
+	configPath string
 )
 
 func init() {
 	flag.StringVar(&dbPath, "db", "", "path to the database")
+	flag.StringVar(&configPath, "conf", "", "path to the ini config file")
 }
 
 func registerCommands(bot *anna.Bot) {
@@ -36,17 +42,53 @@ func registerTasks(bot *anna.Bot) {
 func main() {
 	flag.Parse()
 
-	if dbPath == "" {
+	switch {
+	case dbPath == "", configPath == "":
 		flag.Usage()
 		os.Exit(2)
 	}
+
+	configPath, err := filepath.Abs(configPath)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
+	}
+	configDir, configFile := path.Split(configPath)
+	v := viper.New()
+	v.SetConfigType("yaml")
+	v.SetConfigName(strings.TrimSuffix(configFile, path.Ext(configFile)))
+	v.AddConfigPath(configDir)
+	if err := v.ReadInConfig(); err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
+	}
+
+	config := &anna.Config{
+		CommandPrefix: v.GetString("command_prefix"),
+
+		DiscordEmail:    v.GetString("discord.email"),
+		DiscordPassword: v.GetString("discord.password"),
+		DiscordToken:    v.GetString("discord.token"),
+
+		SocialClubCrewID: v.GetInt("socialclub.crew_id"),
+
+		GoogleDriveRosterID: v.GetString("roster.sheet_id"),
+
+		PSNEmail:        v.GetString("psn.email"),
+		PSNUsername:     v.GetString("psn.username"),
+		PSNPassword:     v.GetString("psn.password"),
+		PSNClientID:     v.GetString("psn.client_id"),
+		PSNClientSecret: v.GetString("psn.client_secret"),
+		PSNDuid:         v.GetString("psn.duid"),
+	}
+
 	db, err := bolt.Open(dbPath, 0600, nil)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}
 
-	bot := anna.NewBot(db)
+	bot := anna.NewBot(config, db)
 	registerCommands(bot)
 	registerTasks(bot)
 

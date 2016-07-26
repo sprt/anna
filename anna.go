@@ -12,6 +12,19 @@ import (
 	"github.com/sprt/anna/services/socialclub"
 )
 
+type Config struct {
+	CommandPrefix string
+
+	DiscordEmail, DiscordPassword, DiscordToken string
+
+	SocialClubCrewID    int
+	GoogleDriveRosterID string
+
+	PSNClientID, PSNClientSecret       string
+	PSNDuid                            string
+	PSNUsername, PSNEmail, PSNPassword string
+}
+
 type Bot struct {
 	email, password, token string
 	cmdPrefix              string
@@ -25,16 +38,16 @@ type Bot struct {
 	SocialClub *socialclub.Client
 }
 
-func NewBot(db *bolt.DB) *Bot {
+func NewBot(config *Config, db *bolt.DB) *Bot {
 	return &Bot{
-		email:     Config.DiscordEmail,
-		password:  Config.DiscordPassword,
-		token:     Config.DiscordToken,
-		cmdPrefix: Config.CommandPrefix,
+		email:     config.DiscordEmail,
+		password:  config.DiscordPassword,
+		token:     config.DiscordToken,
+		cmdPrefix: config.CommandPrefix,
 		DB:        db,
 
-		Roster:     roster.NewClient(Config.GoogleDriveRosterID, nil, nil),
-		SocialClub: socialclub.NewClient(&socialclub.Config{CrewID: Config.SocialClubCrewID}, nil, nil),
+		Roster:     roster.NewClient(config.GoogleDriveRosterID, nil, nil),
+		SocialClub: socialclub.NewClient(&socialclub.Config{CrewID: config.SocialClubCrewID}, nil, nil),
 	}
 }
 
@@ -91,12 +104,12 @@ func (b *Bot) RegisterTask(fn func(*Bot) error, sleep time.Duration) {
 
 func (b *Bot) onReady(s *discordgo.Session, r *discordgo.Ready) {
 	for _, task := range b.tasks {
+		// FIXME: some tasks triggering twice each iteration
 		go func() {
 			for {
 				time.Sleep(task.sleep)
 				log.Print("Starting task...")
-				err := task.fn(b)
-				if err != nil {
+				if err := task.fn(b); err != nil {
 					log.Printf("ERROR: task: %s", err)
 					continue
 				}
