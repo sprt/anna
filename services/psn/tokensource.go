@@ -16,15 +16,18 @@ import (
 	"github.com/sprt/anna/services"
 )
 
-type tokenSource struct {
+type TokenSource struct {
 	*services.Client
 	client *http.Client // pointer to Service.client
 	config *Config
 	mu     sync.Mutex // guards Token
 }
 
-func newTokenSource(config *Config, client *http.Client) *tokenSource {
-	ts := &tokenSource{
+func NewTokenSource(config *Config, client *http.Client) *TokenSource {
+	if client == nil {
+		client = http.DefaultClient
+	}
+	ts := &TokenSource{
 		Client: services.NewClient(client, rate.NewLimiter(rate.Inf, 1)),
 		client: client,
 		config: config,
@@ -32,7 +35,7 @@ func newTokenSource(config *Config, client *http.Client) *tokenSource {
 	return ts
 }
 
-func (ts *tokenSource) Token() (*oauth2.Token, error) {
+func (ts *TokenSource) Token() (*oauth2.Token, error) {
 	ts.mu.Lock()
 	defer ts.mu.Unlock()
 
@@ -64,7 +67,7 @@ func (ts *tokenSource) Token() (*oauth2.Token, error) {
 
 // checkToken checks the validity of a new token.
 // It does not check its expiration date.
-func (ts *tokenSource) checkToken(tok *token) error {
+func (ts *TokenSource) checkToken(tok *token) error {
 	req, err := http.NewRequest("GET", baseURL+"/2.0/oauth/token/"+tok.AccessToken, nil)
 	if err != nil {
 		return err
@@ -76,7 +79,7 @@ func (ts *tokenSource) checkToken(tok *token) error {
 	return err
 }
 
-func (ts *tokenSource) token(grantCode string) (*token, time.Time, error) {
+func (ts *TokenSource) token(grantCode string) (*token, time.Time, error) {
 	data := url.Values{}
 	data.Set("client_id", ts.config.ClientID)
 	data.Set("client_secret", ts.config.ClientSecret)
@@ -113,7 +116,7 @@ func (ts *tokenSource) token(grantCode string) (*token, time.Time, error) {
 	return tok, date, nil
 }
 
-func (ts *tokenSource) grantCode() (string, error) {
+func (ts *TokenSource) grantCode() (string, error) {
 	req, err := http.NewRequest("GET", baseURL+"/2.0/oauth/authorize", nil)
 	if err != nil {
 		return "", nil
@@ -150,7 +153,7 @@ func (ts *tokenSource) grantCode() (string, error) {
 	return resp.Header.Get("X-NP-GRANT-CODE"), nil
 }
 
-func (ts *tokenSource) pullSSOCookie() error {
+func (ts *TokenSource) pullSSOCookie() error {
 	data := url.Values{}
 	data.Set("authentication_type", "password")
 	data.Set("username", ts.config.Email)

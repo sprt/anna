@@ -47,7 +47,7 @@ func init() {
 }
 
 func TestIntegrationTokenSource(t *testing.T) {
-	ts := newTokenSource(integrationconfig, http.DefaultClient)
+	ts := NewTokenSource(integrationconfig, http.DefaultClient)
 	if _, err := ts.Token(); err != nil {
 		t.Error(err)
 	}

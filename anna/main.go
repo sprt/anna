@@ -37,6 +37,7 @@ func registerCommands(bot *anna.Bot) {
 
 func registerTasks(bot *anna.Bot) {
 	bot.RegisterTask(tasks.FetchMembers, time.Hour)
+	bot.RegisterTask(tasks.FetchOnlineFriends, time.Minute)
 }
 
 func main() {

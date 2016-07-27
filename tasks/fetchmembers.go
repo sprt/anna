@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/boltdb/bolt"
+
 	"github.com/sprt/anna"
 	"github.com/sprt/anna/services/roster"
 	"github.com/sprt/anna/services/socialclub"

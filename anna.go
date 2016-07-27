@@ -5,9 +5,12 @@ import (
 	"strings"
 	"time"
 
+	"golang.org/x/oauth2"
+
 	"github.com/boltdb/bolt"
 	"github.com/bwmarrin/discordgo"
 
+	"github.com/sprt/anna/services/psn"
 	"github.com/sprt/anna/services/roster"
 	"github.com/sprt/anna/services/socialclub"
 )
@@ -34,11 +37,21 @@ type Bot struct {
 	commands               []*command
 	tasks                  []*task
 
+	PSN        *psn.Client
 	Roster     *roster.Client
 	SocialClub *socialclub.Client
 }
 
 func NewBot(config *Config, db *bolt.DB) *Bot {
+	psnConfig := &psn.Config{
+		Username:     config.PSNUsername,
+		Email:        config.PSNEmail,
+		Password:     config.PSNPassword,
+		ClientID:     config.PSNClientID,
+		ClientSecret: config.PSNClientSecret,
+		DUID:         config.PSNDuid,
+	}
+	psnTS := oauth2.ReuseTokenSource(nil, psn.NewTokenSource(psnConfig, nil))
 	return &Bot{
 		email:     config.DiscordEmail,
 		password:  config.DiscordPassword,
@@ -46,6 +59,7 @@ func NewBot(config *Config, db *bolt.DB) *Bot {
 		cmdPrefix: config.CommandPrefix,
 		DB:        db,
 
+		PSN:        psn.NewClient(psnConfig, oauth2.NewClient(oauth2.NoContext, psnTS), nil),
 		Roster:     roster.NewClient(config.GoogleDriveRosterID, nil, nil),
 		SocialClub: socialclub.NewClient(&socialclub.Config{CrewID: config.SocialClubCrewID}, nil, nil),
 	}
