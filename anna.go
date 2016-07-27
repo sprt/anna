@@ -104,7 +104,7 @@ func (b *Bot) RegisterTask(fn func(*Bot) error, sleep time.Duration) {
 
 func (b *Bot) onReady(s *discordgo.Session, r *discordgo.Ready) {
 	for _, task := range b.tasks {
-		// FIXME: some tasks triggering twice each iteration
+		task := task
 		go func() {
 			for {
 				time.Sleep(task.sleep)
