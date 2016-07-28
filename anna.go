@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"golang.org/x/oauth2"
+	"golang.org/x/time/rate"
 
 	"github.com/boltdb/bolt"
 	"github.com/bwmarrin/discordgo"
@@ -16,7 +17,8 @@ import (
 )
 
 type Config struct {
-	CommandPrefix string
+	CommandPrefix    string
+	FriendRequestMsg string
 
 	DiscordEmail, DiscordPassword, DiscordToken string
 
@@ -37,6 +39,8 @@ type Bot struct {
 	commands               []*command
 	tasks                  []*task
 
+	FriendRequestMsg string
+
 	PSN        *psn.Client
 	Roster     *roster.Client
 	SocialClub *socialclub.Client
@@ -52,6 +56,7 @@ func NewBot(config *Config, db *bolt.DB) *Bot {
 		DUID:         config.PSNDuid,
 	}
 	psnTS := oauth2.ReuseTokenSource(nil, psn.NewTokenSource(psnConfig, nil))
+	scRL := rate.NewLimiter(rate.Every(30*time.Second), 1)
 	return &Bot{
 		email:     config.DiscordEmail,
 		password:  config.DiscordPassword,
@@ -59,16 +64,20 @@ func NewBot(config *Config, db *bolt.DB) *Bot {
 		cmdPrefix: config.CommandPrefix,
 		DB:        db,
 
+		FriendRequestMsg: config.FriendRequestMsg,
+
 		PSN:        psn.NewClient(psnConfig, oauth2.NewClient(oauth2.NoContext, psnTS), nil),
 		Roster:     roster.NewClient(config.GoogleDriveRosterID, nil, nil),
-		SocialClub: socialclub.NewClient(&socialclub.Config{CrewID: config.SocialClubCrewID}, nil, nil),
+		SocialClub: socialclub.NewClient(&socialclub.Config{CrewID: config.SocialClubCrewID}, nil, scRL),
 	}
 }
 
 func (b *Bot) Start() error {
 	if err := b.DB.Update(func(tx *bolt.Tx) error {
-		_, err := tx.CreateBucketIfNotExists([]byte("default"))
-		if err != nil {
+		if _, err := tx.CreateBucketIfNotExists([]byte("default")); err != nil {
+			return err
+		}
+		if _, err := tx.CreateBucketIfNotExists([]byte("friended")); err != nil {
 			return err
 		}
 		return nil

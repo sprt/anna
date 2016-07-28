@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/http/httputil"
 	"net/url"
+	"strings"
 	"time"
 
 	"golang.org/x/net/context"
@@ -104,7 +105,8 @@ func reqDump(req *http.Request) string {
 }
 
 func respDump(resp *http.Response) string {
-	respDump, err := httputil.DumpResponse(resp, true)
+	body := !strings.HasPrefix(resp.Header.Get("Content-Type"), "text/html")
+	respDump, err := httputil.DumpResponse(resp, body)
 	if err != nil {
 		return fmt.Sprintf("ERROR dumping response: %s", err)
 	}

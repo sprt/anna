@@ -3,7 +3,9 @@ package socialclub
 import (
 	"encoding/json"
 	"errors"
+	"log"
 	"net/http"
+	"net/http/httputil"
 	"strconv"
 	"time"
 
@@ -76,6 +78,11 @@ func (c *Client) memberList(page int) ([]*Member, error) {
 	list := new(memberListResponse)
 	err = json.NewDecoder(resp.Body).Decode(list)
 	if err != nil {
+		if dump, err := httputil.DumpResponse(resp, true); err == nil {
+			log.Print(string(dump))
+		} else {
+			log.Printf("cannot dump response: %s", err)
+		}
 		return nil, err
 	}
 	if list.Error != "" {

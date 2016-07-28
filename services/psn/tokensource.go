@@ -68,7 +68,7 @@ func (ts *TokenSource) Token() (*oauth2.Token, error) {
 // checkToken checks the validity of a new token.
 // It does not check its expiration date.
 func (ts *TokenSource) checkToken(tok *token) error {
-	req, err := http.NewRequest("GET", baseURL+"/2.0/oauth/token/"+tok.AccessToken, nil)
+	req, err := http.NewRequest("GET", baseOAuthURL+"/2.0/oauth/token/"+tok.AccessToken, nil)
 	if err != nil {
 		return err
 	}
@@ -91,7 +91,7 @@ func (ts *TokenSource) token(grantCode string) (*token, time.Time, error) {
 	data.Set("grant_type", "authorization_code")
 	body := strings.NewReader(data.Encode())
 
-	req, err := http.NewRequest("POST", baseURL+"/2.0/oauth/token", body)
+	req, err := http.NewRequest("POST", baseOAuthURL+"/2.0/oauth/token", body)
 	if err != nil {
 		return nil, time.Time{}, err
 	}
@@ -117,7 +117,7 @@ func (ts *TokenSource) token(grantCode string) (*token, time.Time, error) {
 }
 
 func (ts *TokenSource) grantCode() (string, error) {
-	req, err := http.NewRequest("GET", baseURL+"/2.0/oauth/authorize", nil)
+	req, err := http.NewRequest("GET", baseOAuthURL+"/2.0/oauth/authorize", nil)
 	if err != nil {
 		return "", nil
 	}
@@ -161,7 +161,7 @@ func (ts *TokenSource) pullSSOCookie() error {
 	data.Set("client_id", ts.config.ClientID)
 	body := strings.NewReader(data.Encode())
 
-	req, err := http.NewRequest("POST", baseURL+"/2.0/ssocookie", body)
+	req, err := http.NewRequest("POST", baseOAuthURL+"/2.0/ssocookie", body)
 	if err != nil {
 		return err
 	}

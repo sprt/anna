@@ -125,13 +125,6 @@ func highlightSubstr(s, substr string) string {
 	return fmt.Sprintf("%s**%s**%s", escape(start), escape(mid), escape(end))
 }
 
-func escape(s string) string {
-	for _, c := range []string{"_", "*", "`", "~"} {
-		s = strings.Replace(s, c, "\\"+c, -1)
-	}
-	return s
-}
-
 func searchMembers(members []*anna.Member, q string) (matches []*anna.Member) {
 	// TODO: remove all those strings.ToLower calls
 	for _, m := range members {

@@ -20,8 +20,8 @@ import (
 )
 
 const (
-	baseURL     = "https://auth.api.sonyentertainmentnetwork.com"
-	baseUserURL = "https://us-prof.np.community.playstation.net"
+	baseURL      = "https://us-prof.np.community.playstation.net"
+	baseOAuthURL = "https://auth.api.sonyentertainmentnetwork.com"
 
 	redirectURI   = "com.playstation.PlayStationApp://redirect"
 	serviceEntity = "urn:service-entity:psn"
@@ -71,7 +71,7 @@ func NewClient(config *Config, client *http.Client, rl *rate.Limiter) *Client {
 }
 
 func (c *Client) OnlineFriends() ([]*User, error) {
-	req, err := http.NewRequest("GET", baseUserURL+"/userProfile/v1/users/me/friends/profiles2", nil)
+	req, err := http.NewRequest("GET", baseURL+"/userProfile/v1/users/me/friends/profiles2", nil)
 	if err != nil {
 		return nil, err
 	}
@@ -124,7 +124,20 @@ func (c *Client) SendFriendRequest(username, message string) error {
 	if err != nil {
 		return err
 	}
-	return c.doFriendListRequest("POST", username, bytes.NewBuffer(body))
+
+	req, err := c.makeFriendListRequest("POST", username, bytes.NewBuffer(body))
+	if err != nil {
+		return err
+	}
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := c.doRequest(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	return nil
 }
 
 // TODO: RemoveFriend, CancelFriendRequest?
@@ -140,8 +153,7 @@ func (c *Client) IgnoreFriendRequest(username string) error {
 }
 
 func (c *Client) doFriendListRequest(method, username string, body io.Reader) error {
-	url := baseUserURL + fmt.Sprintf("/userProfile/v1/users/%s/friendList/%s", c.config.Username, username)
-	req, err := http.NewRequest(method, url, body)
+	req, err := c.makeFriendListRequest(method, username, body)
 	if err != nil {
 		return err
 	}
@@ -153,6 +165,11 @@ func (c *Client) doFriendListRequest(method, username string, body io.Reader) er
 	defer resp.Body.Close()
 
 	return nil
+}
+
+func (c *Client) makeFriendListRequest(method, username string, body io.Reader) (*http.Request, error) {
+	url := baseURL + fmt.Sprintf("/userProfile/v1/users/%s/friendList/%s", c.config.Username, username)
+	return http.NewRequest(method, url, body)
 }
 
 func (c *Client) friends(status friendStatus) ([]*User, error) {

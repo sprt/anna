@@ -32,12 +32,15 @@ func init() {
 
 func registerCommands(bot *anna.Bot) {
 	bot.RegisterCommand("eightball", commands.Eightball)
+	bot.RegisterCommand("players", commands.Players)
 	bot.RegisterCommand("userinfo", commands.UserInfo)
 }
 
 func registerTasks(bot *anna.Bot) {
-	bot.RegisterTask(tasks.FetchMembers, time.Hour)
+	bot.RegisterTask(tasks.AcceptFriendRequests, 3*time.Hour)
+	bot.RegisterTask(tasks.FetchMembers, 6*time.Hour)
 	bot.RegisterTask(tasks.FetchOnlineFriends, time.Minute)
+	bot.RegisterTask(tasks.SendFriendRequests, 3*time.Hour)
 }
 
 func main() {
@@ -65,7 +68,8 @@ func main() {
 	}
 
 	config := &anna.Config{
-		CommandPrefix: v.GetString("command_prefix"),
+		CommandPrefix:    v.GetString("command_prefix"),
+		FriendRequestMsg: v.GetString("friend_request_msg"),
 
 		DiscordEmail:    v.GetString("discord.email"),
 		DiscordPassword: v.GetString("discord.password"),
