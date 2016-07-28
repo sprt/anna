@@ -34,6 +34,7 @@ func registerCommands(bot *anna.Bot) {
 	bot.RegisterCommand("eightball", commands.Eightball)
 	bot.RegisterCommand("friends", commands.Friends)
 	bot.RegisterCommand("players", commands.Players)
+	bot.RegisterCommand("random", commands.Random)
 	bot.RegisterCommand("userinfo", commands.UserInfo)
 }
 
