@@ -1,6 +1,7 @@
 package anna
 
 import (
+	"fmt"
 	"log"
 	"strings"
 	"time"
@@ -17,8 +18,10 @@ import (
 )
 
 type Config struct {
+	CommandPrefix string
+
 	OwnerID          string
-	CommandPrefix    string
+	OTChannelID      string
 	FriendRequestMsg string
 
 	DiscordEmail, DiscordPassword, DiscordToken string
@@ -40,8 +43,8 @@ type Bot struct {
 	commands               []*command
 	tasks                  []*task
 
-	OwnerID string
-
+	OwnerID          string
+	otChannelID      string
 	FriendRequestMsg string
 
 	PSN        *psn.Client
@@ -68,6 +71,7 @@ func NewBot(config *Config, db *bolt.DB) *Bot {
 		DB:        db,
 
 		OwnerID:          config.OwnerID,
+		otChannelID:      config.OTChannelID,
 		FriendRequestMsg: config.FriendRequestMsg,
 
 		PSN:        psn.NewClient(psnConfig, oauth2.NewClient(oauth2.NoContext, psnTS), nil),
@@ -109,6 +113,7 @@ func (b *Bot) Start() error {
 
 	b.Session.AddHandler(b.onReady)
 	b.Session.AddHandler(b.onMessageCreate)
+	b.Session.AddHandler(b.onGuildMemberAdd)
 
 	return nil
 }
@@ -142,6 +147,14 @@ func (b *Bot) onReady(s *discordgo.Session, r *discordgo.Ready) {
 				log.Printf("Task done, next run in %s", task.sleep)
 			}
 		}()
+	}
+}
+
+func (b *Bot) onGuildMemberAdd(s *discordgo.Session, m *discordgo.GuildMemberAdd) {
+	say := fmt.Sprintf("Welcome <@!%s>! Don't forget to set your nickname to your PSN.", m.User.ID)
+	_, err := s.ChannelMessageSend(b.otChannelID, say)
+	if err != nil {
+		log.Println("ERROR onGuildMemberAdd:", err)
 	}
 }
 

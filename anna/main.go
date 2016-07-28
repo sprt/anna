@@ -72,6 +72,7 @@ func main() {
 
 	config := &anna.Config{
 		CommandPrefix:    v.GetString("command_prefix"),
+		OTChannelID:      v.GetString("ot_channel_id"),
 		FriendRequestMsg: v.GetString("friend_request_msg"),
 
 		DiscordEmail:    v.GetString("discord.email"),
