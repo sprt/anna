@@ -36,6 +36,7 @@ func registerCommands(bot *anna.Bot) {
 	bot.RegisterCommand("ping", commands.Ping)
 	bot.RegisterCommand("players", commands.Players)
 	bot.RegisterCommand("random", commands.Random)
+	bot.RegisterCommand("timer", commands.Timer)
 	bot.RegisterCommand("userinfo", commands.UserInfo)
 }
 
