@@ -32,6 +32,7 @@ const (
 )
 
 var (
+	ErrAccessDeniedPrivacy    = errors.New("psn: access denied by privacy level")
 	ErrAlreadyFriends         = errors.New("psn: already friends")
 	ErrAlreadyFriendRequested = errors.New("psn: already friend-requested")
 	ErrFriendRequestNotFound  = errors.New("psn: friend request not found")
@@ -113,7 +114,8 @@ func (c *Client) SentFriendRequests() ([]*User, error) {
 	return c.friends(sentFriendRequests)
 }
 
-// SendFriendRequest may return ErrAlreadyFriendRequested or ErrUserNotFound.
+// SendFriendRequest may return ErrAlreadyFriendRequested, ErrAlreadyFriends or
+// ErrUserNotFound.
 func (c *Client) SendFriendRequest(username, message string) error {
 	data := struct {
 		RequestMessage string `json:"requestMessage"`
@@ -205,7 +207,7 @@ func (c *Client) friends(status friendStatus) ([]*User, error) {
 
 func (c *Client) doRequest(req *http.Request) (*http.Response, error) {
 	resp, err := c.Do(req)
-	if err != nil {
+	if err != nil && resp == nil {
 		return nil, err
 	}
 	var buf bytes.Buffer
@@ -225,6 +227,8 @@ func (c *Client) doRequest(req *http.Request) (*http.Response, error) {
 		}
 		if e := respData.Error; e != nil {
 			switch e.Code {
+			case 2105868:
+				return nil, ErrAccessDeniedPrivacy
 			case 2107650:
 				return nil, ErrAlreadyFriends
 			case 2107651:
@@ -244,7 +248,7 @@ func (c *Client) doRequest(req *http.Request) (*http.Response, error) {
 		}
 	}
 
-	return resp, nil
+	return resp, err
 }
 
 type friendStatus string

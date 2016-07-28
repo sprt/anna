@@ -17,6 +17,7 @@ import (
 )
 
 type Config struct {
+	OwnerID          string
 	CommandPrefix    string
 	FriendRequestMsg string
 
@@ -35,9 +36,11 @@ type Bot struct {
 	cmdPrefix              string
 	DB                     *bolt.DB
 	Session                *discordgo.Session
-	user, owner            *discordgo.User
+	user                   *discordgo.User
 	commands               []*command
 	tasks                  []*task
+
+	OwnerID string
 
 	FriendRequestMsg string
 
@@ -64,6 +67,7 @@ func NewBot(config *Config, db *bolt.DB) *Bot {
 		cmdPrefix: config.CommandPrefix,
 		DB:        db,
 
+		OwnerID:          config.OwnerID,
 		FriendRequestMsg: config.FriendRequestMsg,
 
 		PSN:        psn.NewClient(psnConfig, oauth2.NewClient(oauth2.NoContext, psnTS), nil),
@@ -102,7 +106,6 @@ func (b *Bot) Start() error {
 
 	b.Session = session
 	b.user = user
-	// TODO: initialize owner
 
 	b.Session.AddHandler(b.onReady)
 	b.Session.AddHandler(b.onMessageCreate)

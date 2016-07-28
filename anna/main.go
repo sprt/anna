@@ -32,6 +32,7 @@ func init() {
 
 func registerCommands(bot *anna.Bot) {
 	bot.RegisterCommand("eightball", commands.Eightball)
+	bot.RegisterCommand("friends", commands.Friends)
 	bot.RegisterCommand("players", commands.Players)
 	bot.RegisterCommand("userinfo", commands.UserInfo)
 }
@@ -40,7 +41,7 @@ func registerTasks(bot *anna.Bot) {
 	bot.RegisterTask(tasks.AcceptFriendRequests, 3*time.Hour)
 	bot.RegisterTask(tasks.FetchMembers, 6*time.Hour)
 	bot.RegisterTask(tasks.FetchOnlineFriends, time.Minute)
-	bot.RegisterTask(tasks.SendFriendRequests, 3*time.Hour)
+	// bot.RegisterTask(tasks.SendFriendRequests, 3*time.Hour)
 }
 
 func main() {
@@ -74,6 +75,7 @@ func main() {
 		DiscordEmail:    v.GetString("discord.email"),
 		DiscordPassword: v.GetString("discord.password"),
 		DiscordToken:    v.GetString("discord.token"),
+		OwnerID:         v.GetString("discord.owner_id"),
 
 		SocialClubCrewID: v.GetInt("socialclub.crew_id"),
 
