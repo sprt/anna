@@ -26,6 +26,10 @@ type Config struct {
 	OTChannelID      string
 	FriendRequestMsg string
 
+	Subreddit       string
+	DomainBlacklist []string
+	UserBlacklist   []string
+
 	DiscordEmail, DiscordPassword, DiscordToken string
 
 	SocialClubCrewID    int
@@ -46,8 +50,12 @@ type Bot struct {
 	tasks                  []*task
 
 	OwnerID          string
-	otChannelID      string
+	OTChannelID      string
 	FriendRequestMsg string
+
+	Subreddit       string
+	DomainBlacklist []string
+	UserBlacklist   []string
 
 	PSN        *psn.Client
 	Roster     *roster.Client
@@ -73,8 +81,12 @@ func NewBot(config *Config, db *bolt.DB) *Bot {
 		DB:        db,
 
 		OwnerID:          config.OwnerID,
-		otChannelID:      config.OTChannelID,
+		OTChannelID:      config.OTChannelID,
 		FriendRequestMsg: config.FriendRequestMsg,
+
+		Subreddit:       config.Subreddit,
+		DomainBlacklist: config.DomainBlacklist,
+		UserBlacklist:   config.UserBlacklist,
 
 		PSN:        psn.NewClient(psnConfig, oauth2.NewClient(oauth2.NoContext, psnTS), nil),
 		Roster:     roster.NewClient(config.GoogleDriveRosterID, nil, nil),
@@ -155,7 +167,7 @@ func (b *Bot) onReady(s *discordgo.Session, r *discordgo.Ready) {
 
 func (b *Bot) onGuildMemberAdd(s *discordgo.Session, m *discordgo.GuildMemberAdd) {
 	say := fmt.Sprintf("Welcome <@!%s>! Don't forget to set your nickname to your PSN.", m.User.ID)
-	_, err := s.ChannelMessageSend(b.otChannelID, say)
+	_, err := s.ChannelMessageSend(b.OTChannelID, say)
 	if err != nil {
 		log.Println("ERROR onGuildMemberAdd:", err)
 	}
@@ -211,7 +223,7 @@ func (bot *Bot) onPresenceUpdate(s *discordgo.Session, m *discordgo.PresenceUpda
 			say += fmt.Sprintf(" (last peak: %d ppl @ %s)", lastPeak.Count,
 				lastPeak.Date.Format("Jan 2 2006 15:04 MST"))
 		}
-		_, err := s.ChannelMessageSend(bot.otChannelID, say)
+		_, err := s.ChannelMessageSend(bot.OTChannelID, say)
 		if err != nil {
 			log.Println(err)
 		}

@@ -46,7 +46,7 @@ func registerTasks(bot *anna.Bot) {
 	bot.RegisterTask(tasks.AcceptFriendRequests, 3*time.Hour)
 	bot.RegisterTask(tasks.FetchMembers, 6*time.Hour)
 	bot.RegisterTask(tasks.FetchOnlineFriends, time.Minute)
-	// bot.RegisterTask(tasks.SendFriendRequests, 3*time.Hour)
+	bot.RegisterTask(tasks.PullRedditPosts, time.Minute)
 }
 
 func main() {
@@ -77,6 +77,10 @@ func main() {
 		CommandPrefix:    v.GetString("command_prefix"),
 		OTChannelID:      v.GetString("ot_channel_id"),
 		FriendRequestMsg: v.GetString("friend_request_msg"),
+
+		Subreddit:       v.GetString("reddit.subreddit"),
+		DomainBlacklist: v.GetStringSlice("reddit.domain_blacklist"),
+		UserBlacklist:   v.GetStringSlice("reddit.user_blacklist"),
 
 		DiscordEmail:    v.GetString("discord.email"),
 		DiscordPassword: v.GetString("discord.password"),
