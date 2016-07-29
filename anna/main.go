@@ -33,6 +33,7 @@ func init() {
 func registerCommands(bot *anna.Bot) {
 	bot.RegisterCommand("eightball", commands.Eightball)
 	bot.RegisterCommand("friends", commands.Friends)
+	bot.RegisterCommand("peak", commands.Peak)
 	bot.RegisterCommand("ping", commands.Ping)
 	bot.RegisterCommand("players", commands.Players)
 	bot.RegisterCommand("random", commands.Random)

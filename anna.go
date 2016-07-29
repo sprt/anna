@@ -1,6 +1,8 @@
 package anna
 
 import (
+	"bytes"
+	"encoding/gob"
 	"fmt"
 	"log"
 	"strings"
@@ -114,6 +116,7 @@ func (b *Bot) Start() error {
 	b.Session.AddHandler(b.onReady)
 	b.Session.AddHandler(b.onMessageCreate)
 	b.Session.AddHandler(b.onGuildMemberAdd)
+	b.Session.AddHandler(b.onPresenceUpdate)
 
 	return nil
 }
@@ -158,6 +161,63 @@ func (b *Bot) onGuildMemberAdd(s *discordgo.Session, m *discordgo.GuildMemberAdd
 	}
 }
 
+func (bot *Bot) onPresenceUpdate(s *discordgo.Session, m *discordgo.PresenceUpdate) {
+	// TODO: trigger peak check on ready
+	if m.Status == "" || m.Status == "offline" {
+		return
+	}
+
+	guild, err := s.Guild(m.GuildID)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	var current int
+	for _, pres := range guild.Presences {
+		if pres.Status != "offline" {
+			current++
+		}
+	}
+
+	var newPeak *Peak
+	var lastPeak *Peak
+	if err := bot.DB.Update(func(tx *bolt.Tx) error {
+		buk := tx.Bucket([]byte("default"))
+		b := buk.Get([]byte("peak"))
+		peak := new(Peak)
+		if b != nil {
+			lastPeak = peak
+			buf := bytes.NewBuffer(b)
+			if err := gob.NewDecoder(buf).Decode(peak); err != nil {
+				return err
+			}
+		}
+		if current > peak.Count {
+			newPeak = &Peak{Count: current, Date: time.Now().UTC()}
+			var b bytes.Buffer
+			if err := gob.NewEncoder(&b).Encode(newPeak); err != nil {
+				return err
+			}
+			return buk.Put([]byte("peak"), b.Bytes())
+		}
+		return nil
+	}); err != nil {
+		log.Println(err)
+	}
+
+	if newPeak != nil {
+		say := fmt.Sprintf("New peak: %d people online!", newPeak.Count)
+		if lastPeak != nil {
+			say += fmt.Sprintf(" (last peak: %d ppl @ %s)", lastPeak.Count,
+				lastPeak.Date.Format("Jan 2 2006 15:04 MST"))
+		}
+		_, err := s.ChannelMessageSend(bot.otChannelID, say)
+		if err != nil {
+			log.Println(err)
+		}
+	}
+}
+
 func (b *Bot) onMessageCreate(s *discordgo.Session, mc *discordgo.MessageCreate) {
 	if mc.Author.ID == b.user.ID {
 		return
@@ -191,4 +251,9 @@ type command struct {
 type task struct {
 	fn    func(*Bot) error
 	sleep time.Duration
+}
+
+type Peak struct {
+	Count int
+	Date  time.Time
 }
