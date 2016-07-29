@@ -48,7 +48,7 @@ func Players(bot *anna.Bot, msg *discordgo.Message, args []string) error {
 	if len(players) == 0 {
 		content = "No one on :("
 	} else {
-		content = fmt.Sprintf("%d players: %s", len(players), strings.Join(players, ", "))
+		content = fmt.Sprintf("%d on GTA: %s", len(players), strings.Join(players, ", "))
 	}
 	_, err := bot.Session.ChannelMessageSend(msg.ChannelID, content)
 	return err
