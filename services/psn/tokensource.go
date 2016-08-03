@@ -3,6 +3,7 @@ package psn
 import (
 	"encoding/base64"
 	"encoding/json"
+	"log"
 	"net/http"
 	"net/http/cookiejar"
 	"net/url"
@@ -62,6 +63,7 @@ func (ts *TokenSource) Token() (*oauth2.Token, error) {
 		RefreshToken: tok.RefreshToken,
 		Expiry:       date.Add(time.Duration(tok.ExpiresIn) * time.Second),
 	}
+	log.Printf("PSN access token: %s", tok.AccessToken)
 	return token, nil
 }
 
