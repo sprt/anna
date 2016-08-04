@@ -69,8 +69,9 @@ func playersAll(bot *anna.Bot, msg *discordgo.Message, args []string) error {
 	}
 
 	var buf bytes.Buffer
+	buf.WriteString(fmt.Sprintf("%d players:\n", len(online)))
 	for game, users := range byGame {
-		buf.WriteString(fmt.Sprintf("**%s**: %s\n", game, strings.Join(users, ", ")))
+		buf.WriteString(fmt.Sprintf("⦁ **%s** — %s\n", game, strings.Join(users, ", ")))
 	}
 
 	var say string
