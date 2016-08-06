@@ -21,30 +21,22 @@ func Players(bot *anna.Bot, msg *discordgo.Message, args []string) error {
 		}
 	}
 
-	var sp, mp []string
 	online, err := online(bot)
 	if err != nil {
 		return err
 	}
+	var players *gamePlayers
 	for _, gp := range online {
 		if gp.name == gtav {
-			for _, p := range gp.players {
-				escaped := escape(p.name)
-				if p.online {
-					mp = append(mp, escaped)
-				} else {
-					sp = append(sp, fmt.Sprintf("*%s*", escaped))
-				}
-			}
+			players = gp
 		}
 	}
-	players := append(mp, sp...)
 
 	var content string
-	if len(players) == 0 {
+	if players == nil || len(players.players) == 0 {
 		content = "No one on GTA :( Try `!players all`."
 	} else {
-		content = strings.Join(players, ", ")
+		content = strings.Join(players.list(), ", ")
 	}
 	_, err = bot.Session.ChannelMessageSend(msg.ChannelID, content)
 	return err
@@ -58,11 +50,7 @@ func playersAll(bot *anna.Bot, msg *discordgo.Message, args []string) error {
 
 	var buf bytes.Buffer
 	for _, gp := range online {
-		var players []string
-		for _, p := range gp.players {
-			players = append(players, p.name)
-		}
-		buf.WriteString(fmt.Sprintf("⦁ **%s** — %s\n", gp.name, strings.Join(players, ", ")))
+		buf.WriteString(fmt.Sprintf("⦁ **%s** — %s\n", gp.name, strings.Join(gp.list(), ", ")))
 	}
 
 	var say string
@@ -93,37 +81,63 @@ func online(bot *anna.Bot) ([]*gamePlayers, error) {
 
 func groupByGame(players []*psn.User) []*gamePlayers {
 	groupped := make(map[string][]*player)
-	for _, u := range players {
-		for _, pres := range u.Presences {
-			var online bool
-			switch pres.GameName {
-			case "":
-				continue
-			case gtav:
-				online = strings.Contains(pres.GameStatus, "Online") || strings.Contains(pres.GameStatus, "Heist")
+	for _, p := range players {
+		for _, pres := range p.Presences {
+			if pres.Platform == "PS4" && pres.GameName != "" {
+				groupped[pres.GameName] = append(groupped[pres.GameName], &player{name: p.Username, presence: pres})
 			}
-			groupped[pres.GameName] = append(groupped[pres.GameName], &player{name: u.Username, online: online})
 		}
 	}
-
-	var list []*gamePlayers
+	var gp []*gamePlayers
 	for game, players := range groupped {
-		list = append(list, &gamePlayers{name: game, players: players})
+		gp = append(gp, &gamePlayers{name: game, players: players})
 	}
-
-	byGameName := byName(list)
-	sort.Sort(byGameName)
-	return byGameName
+	sort.Sort(byName(gp))
+	return gp
 }
 
 type player struct {
-	name   string
-	online bool
+	name     string
+	presence *psn.Presence
+}
+
+func (p *player) online() bool {
+	switch p.presence.GameName {
+	case gtav:
+		return strings.Contains(p.presence.GameStatus, "Online") || strings.Contains(p.presence.GameStatus, "Heist")
+	default:
+		return true
+	}
+}
+
+func (p *player) String() string {
+	if !p.online() {
+		return fmt.Sprintf("*%s*", escape(p.name))
+	}
+	return escape(p.name)
 }
 
 type gamePlayers struct {
 	name    string
 	players []*player
+}
+
+func (gp *gamePlayers) list() (names []string) {
+	var sp, mp []*player
+	for _, p := range gp.players {
+		if p.online() {
+			mp = append(mp, p)
+		} else {
+			sp = append(sp, p)
+		}
+	}
+	for _, p := range mp {
+		names = append(names, p.String())
+	}
+	for _, p := range sp {
+		names = append(names, p.String())
+	}
+	return
 }
 
 type byName []*gamePlayers
