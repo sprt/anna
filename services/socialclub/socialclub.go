@@ -9,9 +9,15 @@ import (
 	"strconv"
 	"time"
 
+	"golang.org/x/net/html"
 	"golang.org/x/time/rate"
 
 	"github.com/sprt/anna/services"
+)
+
+const (
+	baseURL        = "https://socialclub.rockstargames.com"
+	baseSupportURL = "https://support.rockstargames.com"
 )
 
 type Member struct {
@@ -36,6 +42,66 @@ func NewClient(config *Config, client *http.Client, rl *rate.Limiter) *Client {
 	}
 }
 
+func (c *Client) Status() Status {
+	req, err := http.NewRequest("GET", baseSupportURL+"/hc/en-us/articles/200426246-GTA-Online-Server-Status-Latest-Updates", nil)
+	if err != nil {
+		return StatusDown
+	}
+
+	resp, err := c.Do(req)
+	if err != nil {
+		return StatusDown
+	}
+	defer resp.Body.Close()
+
+	doc, err := html.Parse(resp.Body)
+	if err != nil {
+		return StatusDown
+	}
+
+	var f func(*html.Node) Status
+	f = func(n *html.Node) Status {
+		if n.Type == html.ElementNode && n.Data == "div" {
+			var hasID bool
+			var status string
+			for _, attr := range n.Attr {
+				if attr.Key == "id" && attr.Val == "ps4UpOrDown" {
+					hasID = true
+				}
+				if attr.Key == "data-upordown" {
+					status = attr.Val
+				}
+			}
+			if hasID {
+				switch status {
+				case "Up":
+					return StatusUp
+				case "Down":
+					return StatusDown
+				default:
+					return StatusLimited
+				}
+			}
+		}
+		for c := n.FirstChild; c != nil; c = c.NextSibling {
+			if s := f(c); s != StatusDown {
+				return s
+			}
+		}
+		return StatusDown
+	}
+
+	return f(doc)
+}
+
+type Status string
+
+const (
+	StatusUp      Status = "up"
+	StatusLimited        = "limited"
+	StatusDown           = "down"
+)
+
 func (c *Client) Members() ([]*Member, error) {
 	var members []*Member
 	var p int
@@ -59,7 +125,7 @@ loop:
 }
 
 func (c *Client) memberList(page int) ([]*Member, error) {
-	req, err := http.NewRequest("GET", "https://socialclub.rockstargames.com/crewsapi/GetMembersList", nil)
+	req, err := http.NewRequest("GET", baseURL+"/crewsapi/GetMembersList", nil)
 	if err != nil {
 		return nil, err
 	}

@@ -20,8 +20,9 @@ import (
 )
 
 const (
-	baseURL      = "https://us-prof.np.community.playstation.net"
-	baseOAuthURL = "https://auth.api.sonyentertainmentnetwork.com"
+	baseURL       = "https://us-prof.np.community.playstation.net"
+	baseOAuthURL  = "https://auth.api.sonyentertainmentnetwork.com"
+	baseStatusURL = "https://status.playstation.com"
 
 	redirectURI   = "com.playstation.PlayStationApp://redirect"
 	serviceEntity = "urn:service-entity:psn"
@@ -69,6 +70,48 @@ func NewClient(config *Config, client *http.Client, rl *rate.Limiter) *Client {
 		Client: services.NewClient(client, rl),
 		config: config,
 	}
+}
+
+func (c *Client) Status() Status {
+	req, err := http.NewRequest("GET", baseStatusURL+"/data/statuses/region/SCEA.json", nil)
+	if err != nil {
+		return StatusDown
+	}
+
+	resp, err := c.doRequest(req)
+	if err != nil {
+		return StatusDown
+	}
+	defer resp.Body.Close()
+
+	var respData *struct {
+		Countries []*struct {
+			CountryCode string `json:"countryCode"`
+			Services    []*struct {
+				ServiceID string   `json:"serviceId"`
+				Status    []string `json:"status"`
+			}
+		} `json:"countries"`
+	}
+	err = json.NewDecoder(resp.Body).Decode(&respData)
+	if err != nil {
+		return StatusDown
+	}
+
+	for _, c := range respData.Countries {
+		if c.CountryCode == "US" {
+			for _, s := range c.Services {
+				if s.ServiceID == psnGamingServiceID {
+					if len(s.Status) == 0 {
+						return StatusUp
+					}
+					return StatusDown
+				}
+			}
+		}
+	}
+
+	return StatusDown
 }
 
 func (c *Client) OnlineFriends() ([]*User, error) {
@@ -258,3 +301,12 @@ const (
 	friendRequests                  = "requested"
 	sentFriendRequests              = "requesting"
 )
+
+type Status string
+
+const (
+	StatusUp   Status = "up"
+	StatusDown        = "down"
+)
+
+const psnGamingServiceID = "bdbc6326-75df-4043-8dfc-495c323f4927"
