@@ -88,9 +88,9 @@ func (c *Client) Status() Status {
 		Countries []*struct {
 			CountryCode string `json:"countryCode"`
 			Services    []*struct {
-				ServiceID string   `json:"serviceId"`
-				Status    []string `json:"status"`
-			}
+				ServiceID string        `json:"serviceId"`
+				Status    []interface{} `json:"status"`
+			} `json:"services"`
 		} `json:"countries"`
 	}
 	err = json.NewDecoder(resp.Body).Decode(&respData)
