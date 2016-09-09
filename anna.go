@@ -107,7 +107,7 @@ func (b *Bot) Start() error {
 		return err
 	}
 
-	session, err := discordgo.New(b.email, b.password, b.token)
+	session, err := discordgo.New(b.email, b.password, "Bot "+b.token)
 	if err != nil {
 		return err
 	}
