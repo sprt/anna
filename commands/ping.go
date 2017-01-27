@@ -9,7 +9,7 @@ import (
 )
 
 func Ping(bot *anna.Bot, msg *discordgo.Message, args []string) error {
-	t, err := time.Parse("2006-01-02T15:04:05-07:00", msg.Timestamp)
+	t, err := time.Parse("2006-01-02T15:04:05-07:00", string(msg.Timestamp))
 	if err != nil {
 		return err
 	}
